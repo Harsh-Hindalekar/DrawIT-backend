@@ -8,10 +8,19 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Fallback logic for DATABASE_URL
+if not DATABASE_URL or "127.0.0.1" in DATABASE_URL or "localhost" in DATABASE_URL:
+    # Use SQLite for fallback if no external DB is configured
+    DATABASE_URL = "sqlite:///./test.db"
+
 print("DATABASE_URL:", DATABASE_URL)
 
 # SQLAlchemy engine
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL, 
+    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+)
 
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
